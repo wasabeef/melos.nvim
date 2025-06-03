@@ -4,7 +4,10 @@
   <p>
     <a href="https://github.com/wasabeef/melos.nvim/releases/latest">
       <img alt="Latest release" src="https://img.shields.io/github/v/release/wasabeef/melos.nvim" />
-      </a>
+    </a>
+  </p>
+  <p>
+    <a href="README.ja.md">日本語</a>
   </p>
 </div>
 
