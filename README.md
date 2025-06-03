@@ -26,7 +26,7 @@ https://github.com/user-attachments/assets/e69f5d74-9080-490e-b21f-d68502987f89
 - Neovim >= 0.7
 - [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
 - `yq` command-line tool (required for parsing `melos.yaml`)
-  - See [yq documentation](https://mikefarah.gitbook.io/yq/#install) for installation instructions.
+  - See [yq documentation](https://github.com/mikefarah/yq/#macos--linux-via-homebrew) for installation instructions.
 
 ## Installation
 
@@ -123,7 +123,7 @@ require("melos").setup({
 
 - **If you see `yq: command not found` or a similar error:**
   - This plugin uses the `yq` command-line tool to parse `melos.yaml`.
-  - Check if `yq` is installed on your system. If not, install it according to the [official yq documentation](https://mikefarah.gitbook.io/yq/#install).
+  - Check if `yq` is installed on your system. If not, install it according to the [official yq documentation](https://github.com/mikefarah/yq/#macos--linux-via-homebrew).
 - **If you see `melos: command not found` or a similar error:**
   - This plugin executes the `melos` command directly.
   - Check if `melos` is globally installed on your system or included in your project's `dev_dependencies` and executable (e.g., via `dart pub global run melos` or `flutter pub global run melos`).
