@@ -53,10 +53,6 @@ use {
 }
 ```
 
-## Screenshots / GIFs (Demos)
-
-(It is recommended to insert screenshots or GIFs showing the plugin in action here. This will help users understand its appearance and operation.)
-
 ## Usage
 
 Executing the following command will display the scripts defined in `melos.yaml` in the `telescope.nvim` picker.

@@ -24,3 +24,6 @@ Thumbs.db
 
 # Melos specific (if used for the plugin development itself)
 #.melos/ 
+
+# SpecStory
+.specstory/
