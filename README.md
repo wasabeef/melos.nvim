@@ -2,6 +2,8 @@
 
 `melos.nvim` is a Neovim plugin that allows you to easily list and execute scripts defined by [melos](https://melos.invertase.dev/), a monorepo management tool for Dart / Flutter projects.
 
+https://github.com/user-attachments/assets/e69f5d74-9080-490e-b21f-d68502987f89
+
 ## Features
 
 - Parses the `melos.yaml` of the current project and extracts the defined scripts.
