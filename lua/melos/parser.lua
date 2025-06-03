@@ -3,13 +3,16 @@ local M = {}
 
 local function parse_melos_yaml()
   local melos_yaml_path = vim.fn.getcwd() .. "/melos.yaml"
-  local file = io.open(melos_yaml_path, "r")
-  if not file then
+  
+  -- Check if melos.yaml exists
+  local file_check = io.open(melos_yaml_path, "r")
+  if not file_check then
     vim.notify("melos.yaml not found in the current directory.", vim.log.levels.ERROR)
     return {}
   end
-  file:close()
+  file_check:close()
 
+  -- Get script definitions using yq
   local yq_command = string.format("yq e '.scripts' -o=json %s", vim.fn.shellescape(melos_yaml_path))
   local json_output = vim.fn.system(yq_command)
 
@@ -20,35 +23,37 @@ local function parse_melos_yaml()
 
   local ok, scripts_json = pcall(vim.fn.json_decode, json_output)
   if not ok or type(scripts_json) ~= "table" then
-    vim.notify("Failed to decode JSON output from yq for scripts section.", vim.log.levels.ERROR)
+    vim.notify("Failed to decode JSON output from yq for scripts section. Output: " .. json_output, vim.log.levels.ERROR)
     return {}
   end
 
   local parsed_scripts = {}
   for key, value in pairs(scripts_json) do
     local script_name = key
-    local line_number = 0 -- Initialize line number
+    local line_number = 0
     local description = ""
 
-    -- If value is a table and has a description property, use it
     if type(value) == "table" and value.description and type(value.description) == "string" then
       description = value.description
+    elseif type(value) == "string" then
+      -- If the value is a simple string, it's the command itself, no separate description
+      description = "" 
     end
-    -- Even for other forms of value (string, table with run/exec, etc.),
-    -- as long as the key (script_name) exists, it is considered a script executable with melos run <key>.
-    -- If there's no description, it remains an empty string.
 
     -- Get line number by reading melos.yaml directly
-    local melos_file = io.open(melos_yaml_path, "r")
-    if melos_file then
+    local melos_file_for_lines = io.open(melos_yaml_path, "r")
+    if melos_file_for_lines then
       local current_line = 0
       local in_scripts_section = false
-      -- Regex to match the script key, allowing for various indentations and ensuring it's a key (ends with :)
-      -- It also handles potential comments after the key.
-      local key_pattern = "^%s*" .. vim.fn.escape(key, ".*[^$") .. ":"
+      -- Regex to match the script key, ensuring it's a key (ends with :),
+      -- followed by optional whitespace and an optional comment, then end of line.
+      local escaped_key_part = vim.fn.escape(key, ".*[^$")
+      local key_pattern = "^%s*" .. escaped_key_part .. ":%s*$"
 
-      for line_content in melos_file:lines() do
+      for line_content in melos_file_for_lines:lines() do
         current_line = current_line + 1
+        line_content = line_content:gsub('\r$', '') -- Strip trailing CR if present
+
         if not in_scripts_section then
           if line_content:match("^scripts:") then -- Detect start of "scripts:" section
             in_scripts_section = true
@@ -58,25 +63,29 @@ local function parse_melos_yaml()
             line_number = current_line
             break -- Exit loop if found
           end
-          -- If we encounter a line that is not indented, it signifies the end of the scripts section or a new top-level key.
-          -- This is a simple heuristic and might need refinement for complex melos.yaml structures.
-          if not line_content:match("^%s+") and not line_content:match("^%s*#") and not line_content:match("^%s*$") and not line_content:match("^scripts:") then
-            -- vim.notify("Exited scripts section at line: " .. current_line .. " due to: " .. line_content, vim.log.levels.DEBUG)
-            break -- Assume end of scripts section if a non-indented, non-comment, non-empty line is found
+          -- If we encounter a line that is not indented, it might signify the end of the scripts section.
+          -- This check is basic and relies on yq having given us a valid script key that *should* be found.
+          if not line_content:match("^%s%s*") and -- not indented (allows empty lines with %s*)
+             not line_content:match("^%s*#") and -- not a comment
+             not line_content:match("^%s*$") and -- not an empty line
+             not line_content:match("^scripts:") then -- not the scripts: line itself
+             -- If we are in scripts_section and hit a new top-level key, break.
+             -- This helps prevent searching the entire file if something is wrong.
+            break 
           end
         end
       end
-      melos_file:close()
+      melos_file_for_lines:close()
     else
-      vim.notify("Could not open " .. melos_yaml_path .. " to determine line numbers.", vim.log.levels.ERROR)
+      vim.notify("Could not re-open " .. melos_yaml_path .. " to determine line numbers.", vim.log.levels.ERROR)
     end
 
     table.insert(parsed_scripts, {
       name = script_name,
       description = description,
-      command = key, -- picker uses id, so this command is auxiliary
+      command = key, -- For picker/execution reference
       id = key,      -- For execution with melos run <id>
-      line = line_number -- Add line number
+      line = line_number 
     })
   end
 
