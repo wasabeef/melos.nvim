@@ -1,0 +1,26 @@
+# Lua
+*.luac
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Vim/Neovim swap files and undo files
+*.swp
+*.swo
+*.swn
+*~
+*.un~
+
+# Project specific (if any, for example, build artifacts or local configs)
+# Example:
+# /build/
+# local_settings.lua
+
+# Melos specific (if used for the plugin development itself)
+#.melos/ 
