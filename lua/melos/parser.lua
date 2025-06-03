@@ -27,25 +27,60 @@ local function parse_melos_yaml()
   local parsed_scripts = {}
   for key, value in pairs(scripts_json) do
     local script_name = key
+    local line_number = 0 -- Initialize line number
     local description = ""
 
-    -- value がテーブルで description プロパティを持っていればそれを採用
+    -- If value is a table and has a description property, use it
     if type(value) == "table" and value.description and type(value.description) == "string" then
       description = value.description
     end
-    -- 他の形式の value (文字列や run/exec を持つテーブルなど) であっても、
-    -- key (script_name) が存在する限り、それは melos run <key> で実行可能なスクリプトとみなす。
-    -- description がなければ空文字のまま。
+    -- Even for other forms of value (string, table with run/exec, etc.),
+    -- as long as the key (script_name) exists, it is considered a script executable with melos run <key>.
+    -- If there's no description, it remains an empty string.
+
+    -- Get line number by reading melos.yaml directly
+    local melos_file = io.open(melos_yaml_path, "r")
+    if melos_file then
+      local current_line = 0
+      local in_scripts_section = false
+      -- Regex to match the script key, allowing for various indentations and ensuring it's a key (ends with :)
+      -- It also handles potential comments after the key.
+      local key_pattern = "^%s*" .. vim.fn.escape(key, ".*[^$") .. ":"
+
+      for line_content in melos_file:lines() do
+        current_line = current_line + 1
+        if not in_scripts_section then
+          if line_content:match("^scripts:") then -- Detect start of "scripts:" section
+            in_scripts_section = true
+          end
+        else -- Inside "scripts:" section
+          if line_content:match(key_pattern) then
+            line_number = current_line
+            break -- Exit loop if found
+          end
+          -- If we encounter a line that is not indented, it signifies the end of the scripts section or a new top-level key.
+          -- This is a simple heuristic and might need refinement for complex melos.yaml structures.
+          if not line_content:match("^%s+") and not line_content:match("^%s*#") and not line_content:match("^%s*$") and not line_content:match("^scripts:") then
+            -- vim.notify("Exited scripts section at line: " .. current_line .. " due to: " .. line_content, vim.log.levels.DEBUG)
+            break -- Assume end of scripts section if a non-indented, non-comment, non-empty line is found
+          end
+        end
+      end
+      melos_file:close()
+    else
+      vim.notify("Could not open " .. melos_yaml_path .. " to determine line numbers.", vim.log.levels.ERROR)
+    end
 
     table.insert(parsed_scripts, {
       name = script_name,
       description = description,
-      command = key, -- picker は id を使うので、この command は補助的なもの
-      id = key      -- melos run <id> で実行するため
+      command = key, -- picker uses id, so this command is auxiliary
+      id = key,      -- For execution with melos run <id>
+      line = line_number -- Add line number
     })
   end
 
-  -- スクリプト名でソート (アルファベット昇順)
+  -- Sort by script name (alphabetical ascending)
   table.sort(parsed_scripts, function(a, b)
     return a.name < b.name
   end)

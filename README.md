@@ -63,19 +63,41 @@ use {
 
 ## Usage
 
-Executing the following command will display the scripts defined in `melos.yaml` in the `telescope.nvim` picker.
+The plugin provides the following commands:
+
+### `:MelosRun`
+
+Displays the scripts defined in `melos.yaml` in the `telescope.nvim` picker.
+Select a script and press `<Enter>` to execute the corresponding `melos` command in a floating terminal.
 
 ```vim
 :MelosRun
 ```
 
-Select a script and press `<Enter>` to execute the corresponding `melos` command in a floating terminal.
+### `:MelosEdit`
 
-Keymapping example:
+Displays the scripts defined in `melos.yaml` in the `telescope.nvim` picker.
+Select a script, and `melos.yaml` will open with the cursor positioned at the selected script's definition.
+
+```vim
+:MelosEdit
+```
+
+### `:MelosOpen`
+
+Opens the `melos.yaml` file for the current project directly.
+
+```vim
+:MelosOpen
+```
+
+### Keymapping Examples
 
 ```lua
 -- In init.lua or related configuration files
 vim.keymap.set('n', '<leader>mr', '<Cmd>MelosRun<CR>', { desc = 'Run Melos script' })
+vim.keymap.set('n', '<leader>me', '<Cmd>MelosEdit<CR>', { desc = 'Edit Melos script in melos.yaml' })
+vim.keymap.set('n', '<leader>mo', '<Cmd>MelosOpen<CR>', { desc = 'Open melos.yaml' })
 ```
 
 ## Configuration
