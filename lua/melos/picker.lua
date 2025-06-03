@@ -9,6 +9,59 @@ local config = require("melos.config") -- Changed from melos_nvim.config
 
 local M = {}
 
+--[[-
+Helper function to scroll the terminal window when pty is true (standard terminal).
+Keeps the last line of the buffer visible at the bottom of the window.
+@param win table The window ID of the terminal.
+@param buf number The buffer number of the terminal.
+--]]
+local function scroll_pty_terminal(win, buf)
+  if not (vim.api.nvim_win_is_valid(win) and vim.api.nvim_buf_is_valid(buf)) then
+    return
+  end
+  if vim.api.nvim_get_current_win() == win and vim.api.nvim_win_get_buf(win) == buf then
+    local target_line = vim.api.nvim_buf_line_count(buf)
+    vim.api.nvim_win_set_cursor(win, { target_line, 0 })
+    vim.api.nvim_win_call(win, function()
+      vim.cmd('normal! zb') -- Bring the current line to the bottom
+    end)
+    vim.cmd("redraw!")
+  end
+end
+
+--[[-
+Helper function to scroll the terminal window when pty is false (non-interactive).
+Adjusts scrolloff to keep the last line visible, avoiding mode-dependent commands.
+@param win table The window ID of the terminal.
+@param buf number The buffer number of the terminal.
+--]]
+local function scroll_non_pty_terminal(win, buf)
+  if not (vim.api.nvim_win_is_valid(win) and vim.api.nvim_buf_is_valid(buf)) then
+    return
+  end
+
+  if vim.api.nvim_get_current_win() == win then
+    local current_mode = vim.fn.mode(true)
+    if current_mode ~= 'i' and current_mode ~= 'R' then -- Only scroll if not in insert/replace mode
+      local target_line = vim.api.nvim_buf_line_count(buf)
+      local original_scrolloff = vim.api.nvim_get_option_value("scrolloff", { win = win })
+
+      vim.api.nvim_set_option_value("scrolloff", 999, { win = win }) -- Ensure cursor line is visible
+      vim.api.nvim_win_set_cursor(win, { target_line, 0 })
+      vim.api.nvim_set_option_value("scrolloff", original_scrolloff, { win = win }) -- Restore scrolloff
+      -- No explicit redraw command to avoid mode errors with pty=false
+    end
+  end
+end
+
+--[[-
+Shows a Telescope picker for Melos scripts.
+Allows running a script or jumping to its definition in melos.yaml.
+@param opts table Options for the picker.
+  @field action_type string ("run"|"edit") Defines the action on selection.
+                           "run" executes the script.
+                           "edit" opens melos.yaml at the script's line.
+--]]
 function M.show_scripts(opts)
   opts = opts or {}
 
@@ -115,31 +168,32 @@ function M.show_scripts(opts)
             vim.api.nvim_buf_set_name(buf, "Melos: " .. selection.value.name)
 
             -- Open terminal in the floating window's buffer
-            vim.fn.termopen(command_to_run, { term_name = "Melos Run" })
+            local term_opts = { term_name = "Melos Run", pty = false } -- pty is hardcoded to false
+            vim.fn.termopen(command_to_run, term_opts)
             
             -- Focus the window to easily switch to terminal mode
             vim.api.nvim_set_current_win(win)
 
             -- Listen for line changes in the terminal buffer to handle scrolling
-            vim.api.nvim_buf_attach(buf, false, {
-              on_lines = function(_, current_bufnr, _, _, _, new_lastline, _)
-                if current_bufnr ~= buf then return end
-
-                vim.schedule(function()
-                  if not (vim.api.nvim_win_is_valid(win) and vim.api.nvim_buf_is_valid(buf)) then
-                    return
-                  end
-                  -- Ensure the current window is still the terminal window we are tracking
-                  if vim.api.nvim_get_current_win() == win and vim.api.nvim_win_get_buf(win) == buf then
-                    vim.api.nvim_win_set_cursor(win, {new_lastline, 0})
-                    vim.api.nvim_win_call(win, function()
-                      vim.cmd('normal! zb') -- Bring the current line (new_lastline) to the bottom
-                    end)
-                    vim.cmd("redraw!")
-                  end
-                end)
-              end,
-            })
+            if term_opts.pty == nil or term_opts.pty == true then -- This condition is currently always false
+              vim.api.nvim_buf_attach(buf, false, {
+                on_lines = function(_, current_bufnr, _, _, _, _, _, _, _) -- Unused vars
+                  if current_bufnr ~= buf then return end
+                  vim.schedule(function()
+                    scroll_pty_terminal(win, buf)
+                  end)
+                end,
+              })
+            else -- pty is false, this block is executed
+              vim.api.nvim_buf_attach(buf, false, {
+                on_lines = function(_, current_bufnr, _, _, _, _, _, _, _) -- Unused vars
+                  if current_bufnr ~= buf then return end
+                  vim.schedule(function()
+                    scroll_non_pty_terminal(win, buf)
+                  end)
+                end,
+              })
+            end
           else
             vim.notify("No script selected or script ID missing.", vim.log.levels.WARN)
           end

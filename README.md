@@ -5,6 +5,9 @@
     <a href="https://github.com/wasabeef/melos.nvim/releases/latest">
       <img alt="Latest release" src="https://img.shields.io/github/v/release/wasabeef/melos.nvim" />
     </a>
+    <a href="https://codeassist.google/">
+      <img alt="Gemini AI" src="https://img.shields.io/badge/Gemini%20AI-Code%20Assist-4796E3?style=flat&logo=google%20gemini&logoColor=white" />
+    </a>
   </p>
   <p>
     <a href="README.ja.md">日本語</a>
