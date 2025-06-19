@@ -1,0 +1,34 @@
+pre-commit:
+  commands:
+    format:
+      run: stylua --check .
+      fail_text: "Formatting issues found. Run 'bun run format' to fix."
+    lint:
+      run: luacheck . || true
+      fail_text: 'Lint issues found. Install luacheck: luarocks install luacheck'
+    test:
+      run: ./scripts/test.sh
+      fail_text: 'Tests failed. Fix issues before committing.'
+
+pre-push:
+  commands:
+    test-all:
+      run: bun run test
+      fail_text: 'All tests must pass before pushing.'
+
+commit-msg:
+  commands:
+    conventional-commit:
+      run: |
+        if ! grep -qE "^(feat|fix|docs|style|refactor|perf|test|chore)(\(.+\))?: .+" "$1"; then
+          echo "Commit message must follow Conventional Commits format:"
+          echo "  feat: add new feature"
+          echo "  fix: resolve bug"
+          echo "  docs: update documentation"
+          echo "  style: formatting changes"
+          echo "  refactor: code restructuring"
+          echo "  perf: performance improvements"
+          echo "  test: add or update tests"
+          echo "  chore: maintenance tasks"
+          exit 1
+        fi

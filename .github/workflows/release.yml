@@ -1,15 +1,15 @@
-name: Create Release
+name: Release
+
 on:
   push:
     tags:
-      - v*
+      - 'v*'
 
 permissions:
   contents: write
 
 jobs:
   release:
-    name: Create Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -17,17 +17,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate a changelog
+      - name: Generate changelog
         uses: orhun/git-cliff-action@v3
-        id: git-cliff
+        id: release_notes
         with:
           config: .github/cliff.toml
           args: --latest --strip header
-        env:
-          OUTPUT: CHANGES.md
-          GITHUB_REPO: ${{ github.repository }}
 
       - name: Create Release
-        uses: ncipollo/create-release@v1
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          body: ${{ steps.git-cliff.outputs.content }}
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body: ${{ steps.release_notes.outputs.content }}
+          draft: false
+          prerelease: false
+

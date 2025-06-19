@@ -1,0 +1,40 @@
+{
+  "name": "melos.nvim",
+  "version": "0.1.0",
+  "description": "A Neovim plugin for managing and running Melos (monorepo tool) scripts",
+  "main": "lua/melos/init.lua",
+  "scripts": {
+    "test": "bun run test:unit && bun run test:format",
+    "test:unit": "./scripts/test.sh",
+    "test:format": "stylua --check .",
+    "format": "stylua . && prettier --write .",
+    "lint": "luacheck . || echo 'Install luacheck: luarocks install luacheck'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wasabeef/melos.nvim.git"
+  },
+  "keywords": [
+    "neovim",
+    "nvim",
+    "plugin",
+    "melos",
+    "monorepo",
+    "dart",
+    "flutter"
+  ],
+  "author": "Daichi Furiya",
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "^3.5.3"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "files": [
+    "lua/",
+    "plugin/",
+    "README.md",
+    "LICENSE"
+  ]
+}
