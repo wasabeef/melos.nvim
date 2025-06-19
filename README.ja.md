@@ -130,9 +130,12 @@ require("melos").setup({
   - このプラグインは `melos.yaml` の解析に `yq` コマンドラインツールを使用します。
   - システムに `yq` がインストールされているか確認してください。インストールされていない場合は、[公式 yq ドキュメント](https://github.com/mikefarah/yq/#macos--linux-via-homebrew) に従ってインストールしてください。
 - **`melos: command not found` のようなエラーが表示される場合:**
+
   - このプラグインは `melos` コマンドを直接実行します。
   - システムに `melos` がグローバルインストールされているか、またはプロジェクトの `dev_dependencies` に含まれていて実行可能になっているか (例: `dart pub global run melos` や `flutter pub global run melos` 経由) を確認してください。
   - インストール方法は [公式 Melos ドキュメント](https://melos.invertase.dev/getting-started) を参照してください。
+
+  - `fix:` バグ修正
 
 ## 貢献
 
