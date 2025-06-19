@@ -5,7 +5,7 @@
 --- Melos scripts. It handles both running scripts and editing their definitions.
 ---
 --- @author Daichi Furiya
---- @copyright 2024
+--- @copyright 2025
 --- @license MIT
 
 local finders = require('telescope.finders')

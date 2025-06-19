@@ -5,7 +5,7 @@
 --- which allows easy listing and execution of Melos scripts defined in melos.yaml.
 ---
 --- @author Daichi Furiya
---- @copyright 2024
+--- @copyright 2025
 --- @license MIT
 
 local config = require('melos.config')

@@ -5,7 +5,7 @@
 --- providing default settings and allowing users to override them.
 ---
 --- @author Daichi Furiya
---- @copyright 2024
+--- @copyright 2025
 --- @license MIT
 
 local M = {}

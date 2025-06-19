@@ -5,7 +5,7 @@
 --- and their metadata. It uses the 'yq' command-line tool for reliable YAML parsing.
 ---
 --- @author Daichi Furiya
---- @copyright 2024
+--- @copyright 2025
 --- @license MIT
 
 local M = {}
