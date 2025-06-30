@@ -23,7 +23,6 @@ Thumbs.db
 # local_settings.lua
 
 # Melos specific (if used for the plugin development itself)
-#.melos/ 
+#.melos/
 
-# SpecStory
-.specstory/
+node_modules/
