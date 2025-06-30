@@ -103,7 +103,9 @@ function M.show_scripts(opts)
 
           local display_text
           if entry.description and entry.description ~= '' then
-            display_text = string.format('%s | %s', display_name, entry.description)
+            -- Trim multi-line description to single line
+            local trimmed_desc = entry.description:gsub('\n', ' '):gsub('\r', ''):gsub('%s+', ' '):match('^%s*(.-)%s*$')
+            display_text = string.format('%s | %s', display_name, trimmed_desc or entry.description)
           else
             display_text = display_name -- Only padded script name if no description
           end

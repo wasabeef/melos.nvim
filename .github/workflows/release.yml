@@ -35,4 +35,3 @@ jobs:
           body: ${{ steps.release_notes.outputs.content }}
           draft: false
           prerelease: false
-
