@@ -242,9 +242,52 @@ local function line_indent(line)
   return spaces and #spaces or 0
 end
 
+--- Encode a Unicode code point as UTF-8 bytes. Returns nil for values
+--- outside the valid Unicode range.
+--- @param cp number
+--- @return string|nil
+--- @private
+local function utf8_encode(cp)
+  if cp < 0 or cp > 0x10FFFF then
+    return nil
+  end
+  if cp < 0x80 then
+    return string.char(cp)
+  elseif cp < 0x800 then
+    return string.char(0xC0 + math.floor(cp / 0x40), 0x80 + (cp % 0x40))
+  elseif cp < 0x10000 then
+    return string.char(0xE0 + math.floor(cp / 0x1000), 0x80 + (math.floor(cp / 0x40) % 0x40), 0x80 + (cp % 0x40))
+  end
+  return string.char(
+    0xF0 + math.floor(cp / 0x40000),
+    0x80 + (math.floor(cp / 0x1000) % 0x40),
+    0x80 + (math.floor(cp / 0x40) % 0x40),
+    0x80 + (cp % 0x40)
+  )
+end
+
+-- Simple (single-char) escape map for YAML double-quoted scalars, restricted
+-- to the subset that is safe to decode without a full YAML state machine.
+local SIMPLE_ESCAPES = {
+  ['0'] = '\0',
+  a = '\a',
+  b = '\b',
+  t = '\t',
+  n = '\n',
+  v = '\v',
+  f = '\f',
+  r = '\r',
+  e = string.char(27),
+  [' '] = ' ',
+  ['"'] = '"',
+  ['/'] = '/',
+  ['\\'] = '\\',
+}
+
 --- Scan a double-quoted YAML scalar starting at `pos` (the opening `"`).
---- Honors `\\` and `\"` escapes and returns the unescaped key and the
---- index of the closing `"`. Returns nil on unterminated input.
+--- Decodes the common YAML 1.2 escapes so the resulting key matches what
+--- yq emits in its JSON output (`\"`, `\\`, `\n`, `\t`, `\xNN`, `\uNNNN`,
+--- `\UNNNNNNNN`, etc.). Returns nil on unterminated or malformed input.
 --- @param line string
 --- @param pos number index of the opening quote
 --- @return string|nil key, number|nil close_pos
@@ -260,11 +303,29 @@ local function scan_double_quoted(line, pos)
       if nxt == '' then
         return nil
       end
-      -- Minimal escape support: \\ and \" map to \ and " respectively,
-      -- other sequences keep the trailing character (matches yq/JSON for
-      -- key-name equality purposes).
-      buf[#buf + 1] = nxt
-      p = p + 2
+
+      local simple = SIMPLE_ESCAPES[nxt]
+      if simple then
+        buf[#buf + 1] = simple
+        p = p + 2
+      elseif nxt == 'x' or nxt == 'u' or nxt == 'U' then
+        local width = (nxt == 'x') and 2 or (nxt == 'u') and 4 or 8
+        local hex = line:sub(p + 2, p + 1 + width)
+        if #hex ~= width or hex:match('%X') then
+          return nil
+        end
+        local encoded = utf8_encode(tonumber(hex, 16))
+        if not encoded then
+          return nil
+        end
+        buf[#buf + 1] = encoded
+        p = p + 2 + width
+      else
+        -- Unknown escape: passthrough the trailing character so we keep
+        -- making progress even on sequences we don't specifically handle.
+        buf[#buf + 1] = nxt
+        p = p + 2
+      end
     elseif c == '"' then
       return table.concat(buf), p
     else

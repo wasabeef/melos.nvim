@@ -493,6 +493,46 @@ assert(by_name[\"say'bye\"].line == 9, \"say'bye line should be 9, got: \" .. to
 " "v7 escaped quoted script keys: line numbers correct"
 if [ $? -ne 0 ]; then cleanup_code=1; fi
 
+# ---- Unicode / control-char YAML escapes in quoted keys (v6) ----
+# Verifies scan_double_quoted decodes \uNNNN (e.g. ☃) and \t so the extracted
+# key matches yq's JSON output and line numbers resolve.
+
+V6U_DIR=$(mktemp -d)
+cp "$FIXTURES_DIR/v6_melos_unicode.yaml" "$V6U_DIR/melos.yaml"
+
+run_nvim_test "$V6U_DIR" "
+local parser = require('melos.parser')
+local scripts = parser.get_scripts()
+local by_name = {}
+for _, s in ipairs(scripts) do by_name[s.name] = s end
+assert(by_name['regular'] ~= nil, 'regular should exist')
+assert(by_name['regular'].line == 4, 'regular line should be 4, got: ' .. tostring(by_name['regular'] and by_name['regular'].line))
+assert(by_name['snowman ☃'] ~= nil, '\\\\u2603 snowman key should be decoded to UTF-8')
+assert(by_name['snowman ☃'].line == 5, 'snowman line should be 5, got: ' .. tostring(by_name['snowman ☃'] and by_name['snowman ☃'].line))
+assert(by_name['tab\there'] ~= nil, '\\\\t tab key should be decoded to tab char')
+assert(by_name['tab\there'].line == 6, 'tab\there line should be 6, got: ' .. tostring(by_name['tab\there'] and by_name['tab\there'].line))
+" "v6 unicode/control-char escaped keys: line numbers correct"
+if [ $? -ne 0 ]; then cleanup_code=1; fi
+
+# ---- Unicode / control-char YAML escapes in quoted keys (v7) ----
+
+V7U_DIR=$(mktemp -d)
+cp "$FIXTURES_DIR/v7_pubspec_unicode.yaml" "$V7U_DIR/pubspec.yaml"
+
+run_nvim_test "$V7U_DIR" "
+local parser = require('melos.parser')
+local scripts = parser.get_scripts()
+local by_name = {}
+for _, s in ipairs(scripts) do by_name[s.name] = s end
+assert(by_name['regular'] ~= nil, 'regular should exist')
+assert(by_name['regular'].line == 7, 'regular line should be 7, got: ' .. tostring(by_name['regular'] and by_name['regular'].line))
+assert(by_name['snowman ☃'] ~= nil, '\\\\u2603 snowman key should be decoded to UTF-8')
+assert(by_name['snowman ☃'].line == 8, 'snowman line should be 8, got: ' .. tostring(by_name['snowman ☃'] and by_name['snowman ☃'].line))
+assert(by_name['tab\there'] ~= nil, '\\\\t tab key should be decoded to tab char')
+assert(by_name['tab\there'].line == 9, 'tab\there line should be 9, got: ' .. tostring(by_name['tab\there'] and by_name['tab\there'].line))
+" "v7 unicode/control-char escaped keys: line numbers correct"
+if [ $? -ne 0 ]; then cleanup_code=1; fi
+
 # ---- CI workflow syntax check ----
 
 run_nvim_test "$PLUGIN_DIR" "

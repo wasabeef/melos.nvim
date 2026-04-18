@@ -1,0 +1,9 @@
+name: v7_unicode
+environment:
+  sdk: '>=3.9.0'
+
+melos:
+  scripts:
+    regular: echo regular
+    "snowman \u2603": echo snowman
+    "tab\there": echo tab
