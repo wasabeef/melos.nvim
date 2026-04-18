@@ -1,0 +1,9 @@
+name: v7_escaped
+environment:
+  sdk: '>=3.9.0'
+
+melos:
+  scripts:
+    regular: echo regular
+    "say\"hi": echo dq-with-quote
+    'say''bye': echo sq-with-quote

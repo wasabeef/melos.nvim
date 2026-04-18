@@ -453,6 +453,46 @@ assert(by_name['test'].line == 8, 'test line should be 8, got: ' .. tostring(by_
 " "v7 anchors with trailing comments: line numbers correct"
 if [ $? -ne 0 ]; then cleanup_code=1; fi
 
+# ---- YAML escapes in quoted script keys (v6) ----
+# Verifies extract_mapping_key honors \" and '' escapes so keys like
+# "say\"hi" and 'say''bye' resolve to non-zero line numbers.
+
+V6E_DIR=$(mktemp -d)
+cp "$FIXTURES_DIR/v6_melos_escaped.yaml" "$V6E_DIR/melos.yaml"
+
+run_nvim_test "$V6E_DIR" "
+local parser = require('melos.parser')
+local scripts = parser.get_scripts()
+local by_name = {}
+for _, s in ipairs(scripts) do by_name[s.name] = s end
+assert(by_name['regular'] ~= nil, 'regular should exist')
+assert(by_name['regular'].line == 4, 'regular line should be 4, got: ' .. tostring(by_name['regular'] and by_name['regular'].line))
+assert(by_name['say\"hi'] ~= nil, 'double-quoted say\"hi (with escaped quote) should exist')
+assert(by_name['say\"hi'].line == 5, 'say\"hi line should be 5, got: ' .. tostring(by_name['say\"hi'] and by_name['say\"hi'].line))
+assert(by_name[\"say'bye\"] ~= nil, \"single-quoted say'bye (with '' escape) should exist\")
+assert(by_name[\"say'bye\"].line == 6, \"say'bye line should be 6, got: \" .. tostring(by_name[\"say'bye\"] and by_name[\"say'bye\"].line))
+" "v6 escaped quoted script keys: line numbers correct"
+if [ $? -ne 0 ]; then cleanup_code=1; fi
+
+# ---- YAML escapes in quoted script keys (v7) ----
+
+V7E_DIR=$(mktemp -d)
+cp "$FIXTURES_DIR/v7_pubspec_escaped.yaml" "$V7E_DIR/pubspec.yaml"
+
+run_nvim_test "$V7E_DIR" "
+local parser = require('melos.parser')
+local scripts = parser.get_scripts()
+local by_name = {}
+for _, s in ipairs(scripts) do by_name[s.name] = s end
+assert(by_name['regular'] ~= nil, 'regular should exist')
+assert(by_name['regular'].line == 7, 'regular line should be 7, got: ' .. tostring(by_name['regular'] and by_name['regular'].line))
+assert(by_name['say\"hi'] ~= nil, 'double-quoted say\"hi (with escaped quote) should exist')
+assert(by_name['say\"hi'].line == 8, 'say\"hi line should be 8, got: ' .. tostring(by_name['say\"hi'] and by_name['say\"hi'].line))
+assert(by_name[\"say'bye\"] ~= nil, \"single-quoted say'bye (with '' escape) should exist\")
+assert(by_name[\"say'bye\"].line == 9, \"say'bye line should be 9, got: \" .. tostring(by_name[\"say'bye\"] and by_name[\"say'bye\"].line))
+" "v7 escaped quoted script keys: line numbers correct"
+if [ $? -ne 0 ]; then cleanup_code=1; fi
+
 # ---- CI workflow syntax check ----
 
 run_nvim_test "$PLUGIN_DIR" "

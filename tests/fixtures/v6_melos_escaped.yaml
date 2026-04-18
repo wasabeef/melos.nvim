@@ -1,0 +1,6 @@
+name: v6_escaped
+
+scripts:
+  regular: echo regular
+  "say\"hi": echo dq-with-quote
+  'say''bye': echo sq-with-quote

@@ -242,9 +242,70 @@ local function line_indent(line)
   return spaces and #spaces or 0
 end
 
+--- Scan a double-quoted YAML scalar starting at `pos` (the opening `"`).
+--- Honors `\\` and `\"` escapes and returns the unescaped key and the
+--- index of the closing `"`. Returns nil on unterminated input.
+--- @param line string
+--- @param pos number index of the opening quote
+--- @return string|nil key, number|nil close_pos
+--- @private
+local function scan_double_quoted(line, pos)
+  local buf = {}
+  local p = pos + 1
+  local len = #line
+  while p <= len do
+    local c = line:sub(p, p)
+    if c == '\\' then
+      local nxt = line:sub(p + 1, p + 1)
+      if nxt == '' then
+        return nil
+      end
+      -- Minimal escape support: \\ and \" map to \ and " respectively,
+      -- other sequences keep the trailing character (matches yq/JSON for
+      -- key-name equality purposes).
+      buf[#buf + 1] = nxt
+      p = p + 2
+    elseif c == '"' then
+      return table.concat(buf), p
+    else
+      buf[#buf + 1] = c
+      p = p + 1
+    end
+  end
+  return nil
+end
+
+--- Scan a single-quoted YAML scalar starting at `pos` (the opening `'`).
+--- Honors the `''` escape for a literal `'`.
+--- @param line string
+--- @param pos number index of the opening quote
+--- @return string|nil key, number|nil close_pos
+--- @private
+local function scan_single_quoted(line, pos)
+  local buf = {}
+  local p = pos + 1
+  local len = #line
+  while p <= len do
+    local c = line:sub(p, p)
+    if c == "'" then
+      if line:sub(p + 1, p + 1) == "'" then
+        buf[#buf + 1] = "'"
+        p = p + 2
+      else
+        return table.concat(buf), p
+      end
+    else
+      buf[#buf + 1] = c
+      p = p + 1
+    end
+  end
+  return nil
+end
+
 --- Extract the YAML mapping key from a line starting at `indent`.
---- Handles bare keys, double-quoted keys, and single-quoted keys.
---- Returns nil if the line is not a mapping key entry.
+--- Handles bare keys, double-quoted keys (with `\\` / `\"` escapes), and
+--- single-quoted keys (with `''` escapes). Returns nil if the line is not
+--- a mapping key entry.
 --- @param line string raw line (no trailing CR)
 --- @param indent number number of leading spaces to skip
 --- @return string|nil extracted key
@@ -254,12 +315,19 @@ local function extract_mapping_key(line, indent)
   local first = line:sub(pos, pos)
   local key
 
-  if first == '"' or first == "'" then
-    local close_pos = line:find(first, pos + 1, true)
-    if not close_pos then
+  if first == '"' then
+    local scanned, close_pos = scan_double_quoted(line, pos)
+    if not scanned then
       return nil
     end
-    key = line:sub(pos + 1, close_pos - 1)
+    key = scanned
+    pos = close_pos + 1
+  elseif first == "'" then
+    local scanned, close_pos = scan_single_quoted(line, pos)
+    if not scanned then
+      return nil
+    end
+    key = scanned
     pos = close_pos + 1
   else
     local colon_pos = line:find(':', pos, true)
