@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-04-18
+
 ### Added
 
 - **melos 7.x (pub workspaces) support**: `pubspec.yaml` with a top-level `melos:` key is now automatically detected and used as the config source. melos 0.x–6.x projects using `melos.yaml` continue to work without any changes.

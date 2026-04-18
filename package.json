@@ -1,6 +1,6 @@
 {
   "name": "melos.nvim",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "A Neovim plugin for managing and running Melos (monorepo tool) scripts",
   "main": "lua/melos/init.lua",
   "scripts": {
