@@ -1,0 +1,27 @@
+name: v7_project
+environment:
+  sdk: '>=3.9.0'
+
+melos:
+  scripts:
+    build:
+      description: 'Build APK'
+      run: flutter build apk
+    check:
+      steps:
+        - dart analyze
+        - dart format --set-exit-if-changed .
+    format:
+      exec: dart format .
+      packageFilters:
+        dirExists: lib
+    build_runner:
+      description: 'Codegen'
+      run: dart run build_runner build
+      env:
+        BUILD_RUNNER_ENV: production
+    parallel_format:
+      exec:
+        run: dart format .
+        concurrency: 5
+        failFast: true

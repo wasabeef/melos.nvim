@@ -1,0 +1,10 @@
+name: v6_project
+
+scripts:
+  build:
+    description: 'Build APK'
+    run: flutter build apk
+  test: flutter test
+  lint:
+    description: 'Lint'
+    run: dart analyze

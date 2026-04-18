@@ -1,0 +1,9 @@
+name: both_project
+environment:
+  sdk: '>=3.9.0'
+
+melos:
+  scripts:
+    build:
+      description: 'Build (v7)'
+      run: flutter build apk

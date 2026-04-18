@@ -1,0 +1,15 @@
+name: v7_groups
+environment:
+  sdk: '>=3.9.0'
+
+melos:
+  scripts:
+    build:
+      description: 'Build'
+      run: flutter build apk
+    ci:
+      scripts:
+        lint:
+          run: dart analyze
+        test:
+          run: flutter test

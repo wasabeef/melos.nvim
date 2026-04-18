@@ -1,0 +1,21 @@
+name: v7_edge
+environment:
+  sdk: '>=3.9.0'
+
+melos:
+  scripts:
+    run:
+      description: 'Script named run'
+      run: dart run
+    steps:
+      steps:
+        - dart analyze
+        - dart test
+    exec:
+      exec: dart format .
+    desc_only:
+      description: 'Only description, no run/steps/exec'
+    my-script:
+      run: echo hyphen
+    my_script:
+      run: echo underscore
