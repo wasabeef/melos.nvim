@@ -418,6 +418,41 @@ assert(by_name['deploy:prod'].line == 11, 'deploy:prod line should be 11, got: '
 " "v7 quoted script keys: line numbers correct"
 if [ $? -ne 0 ]; then cleanup_code=1; fi
 
+# ---- trailing `# comment` on anchor lines (v6) ----
+# Verifies `scripts: # comment` is still detected as the scripts anchor.
+
+V6C_DIR=$(mktemp -d)
+cp "$FIXTURES_DIR/v6_melos_comments.yaml" "$V6C_DIR/melos.yaml"
+
+run_nvim_test "$V6C_DIR" "
+local parser = require('melos.parser')
+local scripts = parser.get_scripts()
+local by_name = {}
+for _, s in ipairs(scripts) do by_name[s.name] = s end
+assert(by_name['build'] ~= nil, 'build should exist')
+assert(by_name['build'].line == 4, 'build line should be 4, got: ' .. tostring(by_name['build'] and by_name['build'].line))
+assert(by_name['test'] ~= nil, 'test should exist')
+assert(by_name['test'].line == 5, 'test line should be 5, got: ' .. tostring(by_name['test'] and by_name['test'].line))
+" "v6 anchor with trailing comment: line numbers correct"
+if [ $? -ne 0 ]; then cleanup_code=1; fi
+
+# ---- trailing `# comment` on anchor lines (v7) ----
+
+V7C_DIR=$(mktemp -d)
+cp "$FIXTURES_DIR/v7_pubspec_comments.yaml" "$V7C_DIR/pubspec.yaml"
+
+run_nvim_test "$V7C_DIR" "
+local parser = require('melos.parser')
+local scripts = parser.get_scripts()
+local by_name = {}
+for _, s in ipairs(scripts) do by_name[s.name] = s end
+assert(by_name['build'] ~= nil, 'build should exist')
+assert(by_name['build'].line == 7, 'build line should be 7, got: ' .. tostring(by_name['build'] and by_name['build'].line))
+assert(by_name['test'] ~= nil, 'test should exist')
+assert(by_name['test'].line == 8, 'test line should be 8, got: ' .. tostring(by_name['test'] and by_name['test'].line))
+" "v7 anchors with trailing comments: line numbers correct"
+if [ $? -ne 0 ]; then cleanup_code=1; fi
+
 # ---- CI workflow syntax check ----
 
 run_nvim_test "$PLUGIN_DIR" "

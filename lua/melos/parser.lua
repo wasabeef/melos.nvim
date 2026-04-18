@@ -282,9 +282,20 @@ local function extract_mapping_key(line, indent)
   return key
 end
 
+--- Strip a trailing ` # comment` from an anchor line so `scripts: # foo` is
+--- treated the same as `scripts:`. Safe for anchor lines because they do not
+--- contain string literals where `#` would be a valid character.
+--- @param line string
+--- @return string
+--- @private
+local function strip_trailing_comment(line)
+  return (line:gsub('%s+#.*$', ''))
+end
+
 --- Find line number of a script key in config file.
 --- Supports v6 (top-level scripts:) and v7 (melos: > scripts: nesting),
---- and both bare and quoted YAML keys (e.g. `"build:apk"`).
+--- both bare and quoted YAML keys (e.g. `"build:apk"`), and anchor lines with
+--- trailing `# comment` such as `melos: # section`.
 ---
 --- @param desc table config descriptor
 --- @param script_key string
@@ -313,13 +324,14 @@ local function find_script_line_number(desc, script_key)
 
     if not is_blank and not is_comment then
       if state == 'BEFORE_ANCHOR' then
+        local bare = strip_trailing_comment(line)
         if desc.flavor == 'v6' then
-          if line:match('^scripts:%s*$') then
+          if bare:match('^scripts:%s*$') then
             state = 'IN_SCRIPTS'
             scripts_indent = 0
           end
         else
-          if line:match('^melos:%s*$') then
+          if bare:match('^melos:%s*$') then
             state = 'ANCHOR_FOUND'
           end
         end
@@ -327,7 +339,8 @@ local function find_script_line_number(desc, script_key)
         if indent == 0 then
           break
         end -- left melos: section
-        if line:match('^%s+scripts:%s*$') then
+        local bare = strip_trailing_comment(line)
+        if bare:match('^%s+scripts:%s*$') then
           state = 'IN_SCRIPTS'
           scripts_indent = indent
         end

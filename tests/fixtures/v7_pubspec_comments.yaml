@@ -1,0 +1,9 @@
+name: v7_comments
+environment:
+  sdk: '>=3.9.0'
+
+melos: # root section
+  scripts: # scripts section
+    build: echo build # inline
+    test:
+      run: dart test
