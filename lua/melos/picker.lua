@@ -80,7 +80,8 @@ function M.show_scripts(opts)
 
   local scripts = parser.get_scripts()
   if not scripts or #scripts == 0 then
-    vim.notify('No melos scripts found.', vim.log.levels.INFO)
+    -- parser already emits a situation-specific notification (empty scripts,
+    -- missing config file, yq failure, etc.). Avoid a duplicate generic notice.
     return
   end
 

@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Config file detection is now descriptor-based**: The parser detects `melos.yaml` vs `pubspec.yaml (melos:)` before executing `yq`, allowing precise query selection (`'.scripts'` for v6, `'.melos.scripts'` for v7).
 - **`:MelosOpen` and `:MelosEdit` open the detected config file**: In v7 projects these commands operate on `pubspec.yaml` instead of `melos.yaml`.
 
+### Fixed
+
+- **Line lookup for quoted YAML keys**: `find_script_line_number` now recognizes `"key"` and `'key'` entries, so `:MelosEdit` jumps correctly for scripts whose names require quoting (e.g. `"build:apk"`).
+- **Duplicate notification when scripts section is empty**: The picker no longer emits a second generic `No melos scripts found.` message after the parser has already notified the specific cause.
+
 ## [0.1.1] - 2025-07-01
 
 ### Fixed
