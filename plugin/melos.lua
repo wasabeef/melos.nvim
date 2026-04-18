@@ -9,17 +9,19 @@ vim.api.nvim_create_user_command('MelosRun', function()
 end, { desc = 'List and run Melos scripts' })
 
 --[[-
-User command to open melos.yaml and jump to a selected script definition.
+User command to open the detected melos config file (melos.yaml or pubspec.yaml)
+and jump to a selected script definition.
 Invokes `melos.edit()`.
 --]]
 vim.api.nvim_create_user_command('MelosEdit', function()
   melos.edit()
-end, { desc = 'Open melos.yaml and jump to the selected script' })
+end, { desc = 'Open the detected melos config file and jump to the selected script' })
 
 --[[-
-User command to open the melos.yaml file in the current project directory.
+User command to open the detected melos config file (melos.yaml or pubspec.yaml)
+in the current project directory.
 Invokes `melos.open_file()`.
 --]]
 vim.api.nvim_create_user_command('MelosOpen', function()
   melos.open_file()
-end, { desc = 'Open melos.yaml in the current project' })
+end, { desc = 'Open the detected melos config file in the current project' })

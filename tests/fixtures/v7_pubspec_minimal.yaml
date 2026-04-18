@@ -1,0 +1,6 @@
+name: v7_minimal
+environment:
+  sdk: '>=3.9.0'
+
+melos:
+  scripts:

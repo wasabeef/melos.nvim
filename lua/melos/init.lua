@@ -34,8 +34,8 @@ end
 --- Show a Telescope picker to select and run a Melos script
 ---
 --- This function displays a Telescope picker containing all scripts defined
---- in the project's melos.yaml file. When a script is selected, it will be
---- executed in a floating terminal.
+--- in the project's melos config file (melos.yaml or pubspec.yaml with melos key).
+--- When a script is selected, it will be executed in a floating terminal.
 ---
 --- This corresponds to the :MelosRun user command.
 ---
@@ -50,8 +50,9 @@ end
 --- Show a Telescope picker to select a Melos script and edit its definition
 ---
 --- This function displays a Telescope picker containing all scripts defined
---- in the project's melos.yaml file. When a script is selected, the melos.yaml
---- file will be opened with the cursor positioned at the script's definition.
+--- in the project's melos config file (melos.yaml or pubspec.yaml with melos key).
+--- When a script is selected, the detected config file will be opened with the
+--- cursor positioned at the script's definition.
 ---
 --- This corresponds to the :MelosEdit user command.
 ---
@@ -63,10 +64,7 @@ function M.edit()
   picker.show_scripts({ action_type = 'edit' })
 end
 
---- Open the melos.yaml file in the current working directory
----
---- This function opens the melos.yaml file located in the current working
---- directory. If the file does not exist, an error notification is displayed.
+--- Open the detected melos config file (melos.yaml or pubspec.yaml) in the current working directory.
 ---
 --- This corresponds to the :MelosOpen user command.
 ---
@@ -75,15 +73,12 @@ end
 --- -- or in Lua:
 --- require("melos").open_file()
 function M.open_file()
-  local melos_yaml_path = vim.fn.getcwd() .. '/melos.yaml'
-  local f = io.open(melos_yaml_path, 'r')
-  if f then
-    f:close()
-    vim.cmd('edit ' .. vim.fn.fnameescape(melos_yaml_path))
-    vim.notify('Opened ' .. melos_yaml_path, vim.log.levels.INFO)
-  else
-    vim.notify('melos.yaml not found in the current directory.', vim.log.levels.ERROR)
+  local desc = require('melos.parser').get_config_descriptor()
+  if not desc then
+    return
   end
+  vim.cmd('edit ' .. vim.fn.fnameescape(desc.path))
+  vim.notify('Opened ' .. desc.path, vim.log.levels.INFO)
 end
 
 return M

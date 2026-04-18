@@ -1,0 +1,6 @@
+name: v6_unicode
+
+scripts:
+  regular: echo regular
+  "snowman \u2603": echo snowman
+  "tab\there": echo tab

@@ -1,0 +1,8 @@
+name: no_melos_project
+description: A Flutter project without melos configuration
+environment:
+  sdk: '>=3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter

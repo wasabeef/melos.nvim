@@ -1,0 +1,8 @@
+name: v6_yaml_escapes
+
+scripts:
+  regular: echo regular
+  "nbsp\_here": echo nbsp
+  "next\Nline": echo nel
+  "line\Lsep": echo ls
+  "para\Psep": echo ps

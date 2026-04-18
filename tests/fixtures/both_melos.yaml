@@ -1,0 +1,6 @@
+name: both_project
+
+scripts:
+  build:
+    description: 'Build (v6)'
+    run: flutter build apk

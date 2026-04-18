@@ -80,7 +80,8 @@ function M.show_scripts(opts)
 
   local scripts = parser.get_scripts()
   if not scripts or #scripts == 0 then
-    vim.notify('No melos scripts found or failed to parse melos.yaml.', vim.log.levels.INFO)
+    -- parser already emits a situation-specific notification (empty scripts,
+    -- missing config file, yq failure, etc.). Avoid a duplicate generic notice.
     return
   end
 
@@ -124,41 +125,38 @@ function M.show_scripts(opts)
           local selection = action_state.get_selected_entry()
 
           if opts.action_type == 'edit' then
-            if selection and selection.value and selection.value.name and selection.value.line then
-              if selection.value.line > 0 then
-                local melos_yaml_path = vim.fn.getcwd() .. '/melos.yaml'
-                -- Check if melos.yaml exists before trying to open it
-                local f = io.open(melos_yaml_path, 'r')
-                if f then
-                  f:close()
-                  vim.cmd('edit ' .. vim.fn.fnameescape(melos_yaml_path))
-                  vim.api.nvim_win_set_cursor(0, { selection.value.line, 0 })
-                  vim.notify('Opened melos.yaml and jumped to script: ' .. selection.value.name, vim.log.levels.INFO)
-                else
-                  vim.notify('melos.yaml not found.', vim.log.levels.ERROR)
-                end
+            local desc = parser.get_config_descriptor()
+            if not desc then
+              return
+            end
+            if selection and selection.value and selection.value.name then
+              vim.cmd('edit ' .. vim.fn.fnameescape(desc.path))
+              if selection.value.line and selection.value.line > 0 then
+                vim.api.nvim_win_set_cursor(0, { selection.value.line, 0 })
+                vim.notify('Opened ' .. desc.path .. ' and jumped to: ' .. selection.value.name, vim.log.levels.INFO)
               else
                 vim.notify(
-                  'Could not determine line number for script: '
-                    .. selection.value.name
-                    .. '. Opening melos.yaml at the beginning.',
+                  'Opened ' .. desc.path .. ' (line unknown for: ' .. selection.value.name .. ')',
                   vim.log.levels.WARN
                 )
-                local melos_yaml_path = vim.fn.getcwd() .. '/melos.yaml'
-                local f = io.open(melos_yaml_path, 'r')
-                if f then
-                  f:close()
-                  vim.cmd('edit ' .. vim.fn.fnameescape(melos_yaml_path))
-                else
-                  vim.notify('melos.yaml not found.', vim.log.levels.ERROR)
-                end
               end
             else
-              vim.notify('No script selected or script data (name/line) missing.', vim.log.levels.WARN)
+              vim.notify('No script selected.', vim.log.levels.WARN)
             end
           else -- Default to "run" action (or if action_type is not 'edit')
             if selection and selection.value and selection.value.id then
-              local command_to_run = string.format('melos run %s', selection.value.id)
+              if selection.value.kind == 'unknown' then
+                vim.notify(
+                  'melos.nvim: script "'
+                    .. selection.value.name
+                    .. '" has no runnable command (unknown kind). Aborting.',
+                  vim.log.levels.WARN
+                )
+                return
+              end
+              -- Use argv list to avoid shell interpretation of script names.
+              local command_argv = { 'melos', 'run', selection.value.id }
+              local command_to_run = table.concat(command_argv, ' ')
               vim.notify(string.format('Running: %s', command_to_run), vim.log.levels.INFO)
 
               local term_width = config.options.terminal_width
@@ -190,7 +188,7 @@ function M.show_scripts(opts)
 
               -- Open terminal in the floating window's buffer
               local term_opts = { term_name = 'Melos Run', pty = false } -- pty is hardcoded to false
-              vim.fn.termopen(command_to_run, term_opts)
+              vim.fn.termopen(command_argv, term_opts)
 
               -- Focus the window to easily switch to terminal mode
               vim.api.nvim_set_current_win(win)

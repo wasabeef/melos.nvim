@@ -1,0 +1,9 @@
+name: v6_hyphen_project
+
+scripts:
+  build-apk:
+    description: 'Build APK'
+    run: flutter build apk
+  run-tests:
+    description: 'Run tests'
+    run: flutter test
