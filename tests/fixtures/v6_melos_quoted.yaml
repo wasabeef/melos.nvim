@@ -1,0 +1,8 @@
+name: v6_quoted_keys
+
+scripts:
+  regular: echo regular
+  "build:apk":
+    description: 'Build APK (quoted key with colon)'
+    run: flutter build apk
+  'deploy:prod': flutter deploy --env prod

@@ -242,8 +242,49 @@ local function line_indent(line)
   return spaces and #spaces or 0
 end
 
+--- Extract the YAML mapping key from a line starting at `indent`.
+--- Handles bare keys, double-quoted keys, and single-quoted keys.
+--- Returns nil if the line is not a mapping key entry.
+--- @param line string raw line (no trailing CR)
+--- @param indent number number of leading spaces to skip
+--- @return string|nil extracted key
+--- @private
+local function extract_mapping_key(line, indent)
+  local pos = indent + 1
+  local first = line:sub(pos, pos)
+  local key
+
+  if first == '"' or first == "'" then
+    local close_pos = line:find(first, pos + 1, true)
+    if not close_pos then
+      return nil
+    end
+    key = line:sub(pos + 1, close_pos - 1)
+    pos = close_pos + 1
+  else
+    local colon_pos = line:find(':', pos, true)
+    if not colon_pos then
+      return nil
+    end
+    key = line:sub(pos, colon_pos - 1)
+    pos = colon_pos
+  end
+
+  -- Require `:` followed by end-of-line, whitespace, or another character (inline value).
+  if line:sub(pos, pos) ~= ':' then
+    return nil
+  end
+  local after = line:sub(pos + 1, pos + 1)
+  if after ~= '' and after ~= ' ' and after ~= '\t' then
+    return nil
+  end
+
+  return key
+end
+
 --- Find line number of a script key in config file.
---- Supports v6 (top-level scripts:) and v7 (melos: > scripts: nesting).
+--- Supports v6 (top-level scripts:) and v7 (melos: > scripts: nesting),
+--- and both bare and quoted YAML keys (e.g. `"build:apk"`).
 ---
 --- @param desc table config descriptor
 --- @param script_key string
@@ -255,7 +296,6 @@ local function find_script_line_number(desc, script_key)
     return 0
   end
 
-  local escaped = script_key:gsub('([%.%+%-%?%*%(%)%[%]%^%$%%])', '%%%1')
   local state = 'BEFORE_ANCHOR'
   local scripts_indent = nil
   -- Indent of direct children of scripts: (determined on first child line seen).
@@ -300,9 +340,12 @@ local function find_script_line_number(desc, script_key)
           script_key_indent = indent
         end
         -- Only match at the direct-child indent level to avoid false hits in sub-fields.
-        if indent == script_key_indent and line:match('^%s*' .. escaped .. ':%s*$') then
-          found = line_num
-          break
+        if indent == script_key_indent then
+          local key = extract_mapping_key(line, indent)
+          if key == script_key then
+            found = line_num
+            break
+          end
         end
       end
     end

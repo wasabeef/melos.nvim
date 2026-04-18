@@ -378,6 +378,46 @@ assert(desc.flavor == 'v6', 'with melos.yaml present, flavor should be v6')
 " "edge: pubspec without melos key + melos.yaml => v6"
 if [ $? -ne 0 ]; then cleanup_code=1; fi
 
+# ---- quoted YAML keys (v6) ----
+# Verifies find_script_line_number handles "key" and 'key' (needed for keys
+# containing `:` and other YAML-reserved characters).
+
+V6Q_DIR=$(mktemp -d)
+cp "$FIXTURES_DIR/v6_melos_quoted.yaml" "$V6Q_DIR/melos.yaml"
+
+run_nvim_test "$V6Q_DIR" "
+local parser = require('melos.parser')
+local scripts = parser.get_scripts()
+local by_name = {}
+for _, s in ipairs(scripts) do by_name[s.name] = s end
+assert(by_name['regular'] ~= nil, 'regular should exist')
+assert(by_name['regular'].line == 4, 'regular line should be 4, got: ' .. tostring(by_name['regular'] and by_name['regular'].line))
+assert(by_name['build:apk'] ~= nil, 'double-quoted build:apk should exist')
+assert(by_name['build:apk'].line == 5, 'build:apk line should be 5, got: ' .. tostring(by_name['build:apk'] and by_name['build:apk'].line))
+assert(by_name['deploy:prod'] ~= nil, 'single-quoted deploy:prod should exist')
+assert(by_name['deploy:prod'].line == 8, 'deploy:prod line should be 8, got: ' .. tostring(by_name['deploy:prod'] and by_name['deploy:prod'].line))
+" "v6 quoted script keys: line numbers correct"
+if [ $? -ne 0 ]; then cleanup_code=1; fi
+
+# ---- quoted YAML keys (v7) ----
+
+V7Q_DIR=$(mktemp -d)
+cp "$FIXTURES_DIR/v7_pubspec_quoted.yaml" "$V7Q_DIR/pubspec.yaml"
+
+run_nvim_test "$V7Q_DIR" "
+local parser = require('melos.parser')
+local scripts = parser.get_scripts()
+local by_name = {}
+for _, s in ipairs(scripts) do by_name[s.name] = s end
+assert(by_name['regular'] ~= nil, 'regular should exist')
+assert(by_name['regular'].line == 7, 'regular line should be 7, got: ' .. tostring(by_name['regular'] and by_name['regular'].line))
+assert(by_name['build:apk'] ~= nil, 'double-quoted build:apk should exist')
+assert(by_name['build:apk'].line == 8, 'build:apk line should be 8, got: ' .. tostring(by_name['build:apk'] and by_name['build:apk'].line))
+assert(by_name['deploy:prod'] ~= nil, 'single-quoted deploy:prod should exist')
+assert(by_name['deploy:prod'].line == 11, 'deploy:prod line should be 11, got: ' .. tostring(by_name['deploy:prod'] and by_name['deploy:prod'].line))
+" "v7 quoted script keys: line numbers correct"
+if [ $? -ne 0 ]; then cleanup_code=1; fi
+
 # ---- CI workflow syntax check ----
 
 run_nvim_test "$PLUGIN_DIR" "

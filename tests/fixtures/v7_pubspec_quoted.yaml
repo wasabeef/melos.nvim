@@ -1,0 +1,11 @@
+name: v7_quoted_keys
+environment:
+  sdk: '>=3.9.0'
+
+melos:
+  scripts:
+    regular: echo regular
+    "build:apk":
+      description: 'Build APK (quoted key with colon)'
+      run: flutter build apk
+    'deploy:prod': flutter deploy --env prod
