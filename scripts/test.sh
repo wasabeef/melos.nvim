@@ -533,6 +533,62 @@ assert(by_name['tab\there'].line == 9, 'tab\there line should be 9, got: ' .. to
 " "v7 unicode/control-char escaped keys: line numbers correct"
 if [ $? -ne 0 ]; then cleanup_code=1; fi
 
+# ---- YAML-specific escapes \N \_ \L \P in quoted keys (v6) ----
+# Verifies the double-quoted scanner decodes YAML's spec-defined named
+# escapes to the correct Unicode code points (U+0085, U+00A0, U+2028, U+2029).
+
+V6Y_DIR=$(mktemp -d)
+cp "$FIXTURES_DIR/v6_melos_yaml_escapes.yaml" "$V6Y_DIR/melos.yaml"
+
+run_nvim_test "$V6Y_DIR" "
+local parser = require('melos.parser')
+local scripts = parser.get_scripts()
+local by_name = {}
+for _, s in ipairs(scripts) do by_name[s.name] = s end
+local nbsp_key = 'nbsp' .. string.char(0xc2, 0xa0) .. 'here'
+local nel_key  = 'next' .. string.char(0xc2, 0x85) .. 'line'
+local ls_key   = 'line' .. string.char(0xe2, 0x80, 0xa8) .. 'sep'
+local ps_key   = 'para' .. string.char(0xe2, 0x80, 0xa9) .. 'sep'
+assert(by_name['regular'] ~= nil, 'regular should exist')
+assert(by_name['regular'].line == 4, 'regular line should be 4, got: ' .. tostring(by_name['regular'] and by_name['regular'].line))
+assert(by_name[nbsp_key] ~= nil, 'NBSP key (backslash-underscore) should decode to U+00A0')
+assert(by_name[nbsp_key].line == 5, 'nbsp line should be 5, got: ' .. tostring(by_name[nbsp_key] and by_name[nbsp_key].line))
+assert(by_name[nel_key] ~= nil, 'NEL key (backslash-N) should decode to U+0085')
+assert(by_name[nel_key].line == 6, 'nel line should be 6, got: ' .. tostring(by_name[nel_key] and by_name[nel_key].line))
+assert(by_name[ls_key] ~= nil, 'LS key (backslash-L) should decode to U+2028')
+assert(by_name[ls_key].line == 7, 'ls line should be 7, got: ' .. tostring(by_name[ls_key] and by_name[ls_key].line))
+assert(by_name[ps_key] ~= nil, 'PS key (backslash-P) should decode to U+2029')
+assert(by_name[ps_key].line == 8, 'ps line should be 8, got: ' .. tostring(by_name[ps_key] and by_name[ps_key].line))
+" "v6 YAML named escapes (N, _, L, P) in keys: line numbers correct"
+if [ $? -ne 0 ]; then cleanup_code=1; fi
+
+# ---- YAML-specific escapes \N \_ \L \P in quoted keys (v7) ----
+
+V7Y_DIR=$(mktemp -d)
+cp "$FIXTURES_DIR/v7_pubspec_yaml_escapes.yaml" "$V7Y_DIR/pubspec.yaml"
+
+run_nvim_test "$V7Y_DIR" "
+local parser = require('melos.parser')
+local scripts = parser.get_scripts()
+local by_name = {}
+for _, s in ipairs(scripts) do by_name[s.name] = s end
+local nbsp_key = 'nbsp' .. string.char(0xc2, 0xa0) .. 'here'
+local nel_key  = 'next' .. string.char(0xc2, 0x85) .. 'line'
+local ls_key   = 'line' .. string.char(0xe2, 0x80, 0xa8) .. 'sep'
+local ps_key   = 'para' .. string.char(0xe2, 0x80, 0xa9) .. 'sep'
+assert(by_name['regular'] ~= nil, 'regular should exist')
+assert(by_name['regular'].line == 7, 'regular line should be 7, got: ' .. tostring(by_name['regular'] and by_name['regular'].line))
+assert(by_name[nbsp_key] ~= nil, 'NBSP key (backslash-underscore) should decode to U+00A0')
+assert(by_name[nbsp_key].line == 8, 'nbsp line should be 8, got: ' .. tostring(by_name[nbsp_key] and by_name[nbsp_key].line))
+assert(by_name[nel_key] ~= nil, 'NEL key (backslash-N) should decode to U+0085')
+assert(by_name[nel_key].line == 9, 'nel line should be 9, got: ' .. tostring(by_name[nel_key] and by_name[nel_key].line))
+assert(by_name[ls_key] ~= nil, 'LS key (backslash-L) should decode to U+2028')
+assert(by_name[ls_key].line == 10, 'ls line should be 10, got: ' .. tostring(by_name[ls_key] and by_name[ls_key].line))
+assert(by_name[ps_key] ~= nil, 'PS key (backslash-P) should decode to U+2029')
+assert(by_name[ps_key].line == 11, 'ps line should be 11, got: ' .. tostring(by_name[ps_key] and by_name[ps_key].line))
+" "v7 YAML named escapes (N, _, L, P) in keys: line numbers correct"
+if [ $? -ne 0 ]; then cleanup_code=1; fi
+
 # ---- CI workflow syntax check ----
 
 run_nvim_test "$PLUGIN_DIR" "

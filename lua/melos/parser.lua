@@ -268,6 +268,8 @@ end
 
 -- Simple (single-char) escape map for YAML double-quoted scalars, restricted
 -- to the subset that is safe to decode without a full YAML state machine.
+-- Includes the YAML-specific escapes \N, \_, \L, \P which resolve to
+-- Unicode code points rather than literal characters.
 local SIMPLE_ESCAPES = {
   ['0'] = '\0',
   a = '\a',
@@ -282,6 +284,10 @@ local SIMPLE_ESCAPES = {
   ['"'] = '"',
   ['/'] = '/',
   ['\\'] = '\\',
+  N = utf8_encode(0x85), -- NEL
+  ['_'] = utf8_encode(0xA0), -- NBSP
+  L = utf8_encode(0x2028), -- LS
+  P = utf8_encode(0x2029), -- PS
 }
 
 --- Scan a double-quoted YAML scalar starting at `pos` (the opening `"`).

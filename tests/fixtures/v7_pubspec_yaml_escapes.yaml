@@ -1,0 +1,11 @@
+name: v7_yaml_escapes
+environment:
+  sdk: '>=3.9.0'
+
+melos:
+  scripts:
+    regular: echo regular
+    "nbsp\_here": echo nbsp
+    "next\Nline": echo nel
+    "line\Lsep": echo ls
+    "para\Psep": echo ps

@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Line lookup for quoted YAML keys**: `find_script_line_number` now recognizes `"key"` and `'key'` entries, so `:MelosEdit` jumps correctly for scripts whose names require quoting (e.g. `"build:apk"`).
 - **Line lookup for quoted keys with YAML escapes**: The quoted-key scanner now honors `\"` / `\\` in double-quoted keys and `''` in single-quoted keys, so entries like `"say\"hi"` and `'say''bye'` resolve to the correct line number instead of 0.
 - **Decode Unicode and control-character escapes in quoted keys**: Double-quoted scanner now recognizes `\n`, `\t`, `\xNN`, `\uNNNN`, and `\UNNNNNNNN`, encoding the result as UTF-8. Keys such as `"snowman \u2603"` or `"tab\there"` now line up with what yq emits in its JSON output.
+- **Decode YAML-specific named escapes**: `\N` (NEL, U+0085), `\_` (NBSP, U+00A0), `\L` (LS, U+2028), and `\P` (PS, U+2029) are now decoded to their spec-defined code points, matching yq's output so keys like `"nbsp\_here"` or `"line\Lsep"` resolve to the correct line number.
 - **Anchor detection with trailing comments**: `scripts: # comment` and `melos: # comment` (valid YAML) are now recognized as anchors, so `:MelosEdit` no longer falls back to opening the file at the top.
 - **Duplicate notification when scripts section is empty**: The picker no longer emits a second generic `No melos scripts found.` message after the parser has already notified the specific cause.
 
